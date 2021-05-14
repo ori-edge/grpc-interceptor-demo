@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package edge_location;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/ori-edge/grpc-interceptor-demo/pkg/api";
+
+service EdgeLocations {
+  rpc Register (EdgeLocation) returns (google.protobuf.Empty) {}
+  rpc Get(EdgeLocation) returns (EdgeLocation) {}
+  rpc List(ListEdgeLocationParams) returns (stream EdgeLocation) {}
+}
+
+message EdgeLocation {
+  string id = 1;
+  string region = 2;
+  string ip_address = 3;
+
+  google.protobuf.Timestamp updated_at = 100;
+}
+
+message ListEdgeLocationParams {
+    int32 limit = 1;
+}
