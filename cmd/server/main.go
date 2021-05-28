@@ -11,15 +11,18 @@ import (
 )
 
 func main() {
+	// The server is set up to listen on localhost, on port 5565
 	lis, err := net.Listen("tcp", "localhost:5565")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
 	s := grpc.NewServer()
+	// Register our server
 	api.RegisterEdgeLocationsServer(s, server.New())
 	log.Println("starting server...")
 
+	// Start serving!
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
