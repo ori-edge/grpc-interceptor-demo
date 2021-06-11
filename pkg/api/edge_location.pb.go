@@ -27,6 +27,8 @@ const (
 // of the legacy proto package is being used.
 const _ = proto.ProtoPackageIsVersion4
 
+// EdgeLocation defines our message type, describing what information an edge
+// location sends to the server and stores
 type EdgeLocation struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

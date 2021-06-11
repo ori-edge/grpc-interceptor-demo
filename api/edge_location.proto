@@ -7,11 +7,14 @@ import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/ori-edge/grpc-interceptor-demo/pkg/api";
 
+// EdgeLocations defines our gRPC service, and available operations on it
 service EdgeLocations {
   rpc Register (EdgeLocation) returns (google.protobuf.Empty) {}
   rpc List(stream EdgeLocation) returns (stream EdgeLocation) {}
 }
 
+// EdgeLocation defines our message type, describing what information an edge
+// location sends to the server and stores
 message EdgeLocation {
   string id = 1;
   string ip_address = 2;

@@ -11,12 +11,17 @@ import (
 	"github.com/ori-edge/grpc-interceptor-demo/pkg/api"
 )
 
+// New is a constructor function that creates our new server with an in-memory
+// store for edge locations. This means that when the server finishes or exits
+// unexpectedly, we lose our edge locations. In a real environment, this store
+// would likely be a database of some kind
 func New() *EdgeLocationsServer {
 	return &EdgeLocationsServer{
 		LocationStore: make(map[string]EdgeLocation),
 	}
 }
 
+// Register takes a client supplied edge location and stores it in-memory
 func (s EdgeLocationsServer) Register(ctx context.Context, el *api.EdgeLocation) (*empty.Empty, error) {
 	s.LocationStore[el.Id] = hydrateType(el)
 	log.Printf("registering client success, id: %v", el.Id)

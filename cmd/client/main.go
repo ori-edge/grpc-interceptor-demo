@@ -7,14 +7,17 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/ori-edge/grpc-interceptor-demo/pkg/api"
 )
 
 const (
+	// Register is the constant for the sub-command to register an edge location with the server
 	Register = "register"
 	List     = "list"
 )
@@ -25,24 +28,39 @@ func main() {
 	fs := flag.NewFlagSet("flagset", flag.ContinueOnError)
 	fs.StringVar(&listFlag, "list", "", "a comma seperated list of ids to fetch from the server")
 
+	// Parse flags from the second onwards - the first is the sub-command addressed lower
+	err := fs.Parse(os.Args[2:])
+	if err != nil {
+		log.Fatalf("couldn't parse flags: %v", err)
+		return
+	}
+
+	// Dial the gRPC server in insecure mode (you should use SSL in production)
 	conn, err := grpc.Dial("localhost:5565", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("couldn't connect to server: %v", err)
 		return
 	}
+
+	// Make sure the connection is closed when we are done
 	defer conn.Close()
 
+	// Create a client that can connect to the server
 	client := api.NewEdgeLocationsClient(conn)
 
+	// Switch through our sub-commands, register, get, list
 	switch os.Args[1] {
 	case Register:
-		_, err = client.Register(context.Background(), &api.EdgeLocation{Id: uuid.New().String()})
+		_, err = client.Register(context.Background(), &api.EdgeLocation{
+			Id:        uuid.New().String(),
+			UpdatedAt: timestamppb.New(time.Now()),
+		})
 		if err != nil {
 			log.Fatal(err)
 		}
 		return
 	case List:
-		// Seperate the user flafs into an array of ids to send to the server
+		// Seperate the user flags into an array of ids to send to the server
 		list := strings.Split(listFlag, ",")
 		// Open a streaming connection to the server
 		stream, err := client.List(context.Background())
@@ -83,6 +101,7 @@ func main() {
 		}()
 		<-done
 		return
+	// Fail gracefully when the user supplies an invalid sub-command
 	default:
 		log.Fatal("argument not supported")
 		return
