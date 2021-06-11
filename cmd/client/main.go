@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
@@ -15,17 +16,14 @@ import (
 
 const (
 	Register = "register"
-	Get      = "get"
 	List     = "list"
 )
 
 func main() {
-	var idFlag string
-	var limitFlag int
+	var listFlag string
 
-	flag.StringVar(&idFlag, "id", "", "the id of an edge location to lookup")
-	flag.IntVar(&limitFlag, "limit", 10, "the number of edge locations to return from a stream")
-	flag.Parse()
+	fs := flag.NewFlagSet("flagset", flag.ContinueOnError)
+	fs.StringVar(&listFlag, "list", "", "a comma seperated list of ids to fetch from the server")
 
 	conn, err := grpc.Dial("localhost:5565", grpc.WithInsecure())
 	if err != nil {
@@ -43,28 +41,34 @@ func main() {
 			log.Fatal(err)
 		}
 		return
-	case Get:
-		if idFlag == "" {
-			flag.PrintDefaults()
-			os.Exit(1)
-		}
-		location, err := client.Get(context.Background(), &api.EdgeLocation{Id: idFlag})
+	case List:
+		// Seperate the user flafs into an array of ids to send to the server
+		list := strings.Split(listFlag, ",")
+		// Open a streaming connection to the server
+		stream, err := client.List(context.Background())
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		log.Println(location)
-		return
-	case List:
-		stream, err := client.List(context.Background(), &api.ListEdgeLocationParams{Limit: int32(limitFlag)})
-		if err != nil {
-			log.Fatal(err)
-		}
+		go func() {
+			// For every id provided, send them on the bidi stream
+			for i := 0; i < len(list); i++ {
+				el := api.EdgeLocation{
+					Id: list[i],
+				}
+				if err := stream.Send(&el); err != nil {
+					log.Fatalf("can not send %v", err)
+				}
+			}
+			if err := stream.CloseSend(); err != nil {
+				log.Println(err)
+			}
+		}()
 
 		done := make(chan bool)
 		go func() {
 			for {
-				resp, err := stream.Recv()
+				locations, err := stream.Recv()
 				if err == io.EOF {
 					done <- true
 					return
@@ -73,7 +77,8 @@ func main() {
 					log.Fatal(err)
 				}
 
-				log.Println(resp)
+				// Display the returned locations
+				log.Println(locations)
 			}
 		}()
 		<-done

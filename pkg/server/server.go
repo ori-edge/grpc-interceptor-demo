@@ -2,6 +2,8 @@ package server
 
 import (
 	"context"
+	"fmt"
+	"io"
 	"log"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -17,29 +19,35 @@ func New() *EdgeLocationsServer {
 
 func (s EdgeLocationsServer) Register(ctx context.Context, el *api.EdgeLocation) (*empty.Empty, error) {
 	s.LocationStore[el.Id] = hydrateType(el)
-	log.Printf("registering client success")
+	log.Printf("registering client success, id: %v", el.Id)
 	return &empty.Empty{}, nil
 }
 
-func (s EdgeLocationsServer) Get(ctx context.Context, el *api.EdgeLocation) (*api.EdgeLocation, error) {
-	log.Println("retrieving edge location...")
-	return hydrateResponse(s.LocationStore[el.Id]), nil
-}
-
-func (s EdgeLocationsServer) List(param *api.ListEdgeLocationParams, stream api.EdgeLocations_ListServer) error {
+func (s EdgeLocationsServer) List(stream api.EdgeLocations_ListServer) error {
 	log.Println("streaming edge locations...")
+	ctx := stream.Context()
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
 
-	i := 0
-	for _, location := range s.LocationStore {
-		if i == int(param.Limit) {
-			log.Println("limit reached - stopping stream")
+		el, err := stream.Recv()
+		if err == io.EOF {
+			log.Println("end of stream")
 			return nil
 		}
-		if err := stream.Send(hydrateResponse(location)); err != nil {
-			return err
+		if err != nil {
+			return fmt.Errorf("receive error %v", err)
 		}
-		i++
-	}
 
-	return nil
+		for _, location := range s.LocationStore {
+			if location.Id == el.Id {
+				if err := stream.Send(hydrateResponse(location)); err != nil {
+					return err
+				}
+			}
+		}
+	}
 }

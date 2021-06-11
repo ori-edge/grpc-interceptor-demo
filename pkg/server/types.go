@@ -15,26 +15,26 @@ type EdgeLocationsServer struct {
 }
 
 type EdgeLocation struct {
-	Id        string
-	Region    string
-	IpAddress string
-	UpdatedAt time.Time
+	Id              string
+	IpAddress       string
+	OperatingSystem string
+	UpdatedAt       time.Time
 }
 
 func hydrateType(el *api.EdgeLocation) EdgeLocation {
 	return EdgeLocation{
-		Id:        el.Id,
-		Region:    el.Region,
-		IpAddress: el.IpAddress,
-		UpdatedAt: el.UpdatedAt.AsTime(),
+		Id:              el.Id,
+		IpAddress:       el.IpAddress,
+		OperatingSystem: el.OperatingSystem,
+		UpdatedAt:       el.UpdatedAt.AsTime(),
 	}
 }
 
 func hydrateResponse(el EdgeLocation) *api.EdgeLocation {
 	return &api.EdgeLocation{
-		Id:        el.Id,
-		Region:    el.Region,
-		IpAddress: el.IpAddress,
-		UpdatedAt: timestamppb.New(el.UpdatedAt),
+		Id:              el.Id,
+		IpAddress:       el.IpAddress,
+		OperatingSystem: el.OperatingSystem,
+		UpdatedAt:       timestamppb.New(el.UpdatedAt),
 	}
 }
