@@ -20,15 +20,12 @@ import (
 const (
 	// Register is the constant for the sub-command to register an edge location with the server
 	Register = "register"
-	// List allow users to list all registered edge locations, allows users to
-	// limit this list through the use of the limit flag
-	List = "list"
+	List     = "list"
 )
 
 func main() {
 	var listFlag string
 
-	// Set up our flags
 	fs := flag.NewFlagSet("flagset", flag.ContinueOnError)
 	fs.StringVar(&listFlag, "list", "", "a comma seperated list of ids to fetch from the server")
 
@@ -60,7 +57,6 @@ func main() {
 	// Switch through our sub-commands, register, get, list
 	switch os.Args[1] {
 	case Register:
-		// Register a location with a user defined region
 		_, err = client.Register(context.Background(), &api.EdgeLocation{
 			Id:        uuid.New().String(),
 			UpdatedAt: timestamppb.New(time.Now()),
@@ -70,7 +66,7 @@ func main() {
 		}
 		return
 	case List:
-		// Seperate the user flafs into an array of ids to send to the server
+		// Seperate the user flags into an array of ids to send to the server
 		list := strings.Split(listFlag, ",")
 		// Open a streaming connection to the server
 		stream, err := client.List(context.Background())
@@ -93,7 +89,6 @@ func main() {
 			}
 		}()
 
-		// Go routine #2 receives the EdgeLocations from the server
 		done := make(chan bool)
 		go func() {
 			for {

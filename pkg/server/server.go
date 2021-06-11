@@ -25,14 +25,9 @@ func New() *EdgeLocationsServer {
 func (s EdgeLocationsServer) Register(ctx context.Context, el *api.EdgeLocation) (*empty.Empty, error) {
 	s.LocationStore[el.Id] = hydrateType(el)
 	log.Printf("registering client success, id: %v", el.Id)
-
 	return &empty.Empty{}, nil
 }
 
-// List iterates through all items within the in-memory store and streams them
-// one by one, back to the client. This function finishes either when the client
-// supplied limit is hit - or there are no more objects in the store. The
-// default limit supplied by the client is 10
 func (s EdgeLocationsServer) List(stream api.EdgeLocations_ListServer) error {
 	log.Println("streaming edge locations...")
 	ctx := stream.Context()

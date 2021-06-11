@@ -30,9 +30,9 @@ In order to not confuse things - there are four different kinds of interceptor -
 [TODO: Diagram Goes Here]
 
 ## Real World Example - Edge Locations
-Here at Ori, we specialise in making the future of cloud computing, and right now - that's edge. Lets say, hypothetically, that we are running a series of microservice based servers in our cloud. All of these servers allow a customer, whether that be a local supermarket, warehouse, or user with some spare compute in his basement to register with Ori using a corresponding client on their hardware. Once registered, we take some of their information and evaluate whether we can on-board our infrastructure onto their compute, and allow public end users to to run their containerised workloads on these nodes.
+Here at Ori, we specialise in making the future of cloud computing, and right now - that's edge. Lets say, hypothetically, that we are running a series of microservices in our cloud. All of these services allow a customer, whether that be a local supermarket, warehouse, or user with some spare compute in his basement, to register with Ori using a corresponding client on their hardware. Once registered, we take some of their information and evaluate whether we can on-board our infrastructure onto their compute, and allow public end users to to run their containerised workloads on these nodes.
 
-Users that wish to enrol, must install a client that takes one simple piece of information, for this example, and that is a region. A region in this sense is the general locality of the compute they want to onboard, such as "London" or "Amsterdam". However - we also want to grab some metadata about the hardware that the layman user may not know, such as the operating system the client is running on, and the IP address the client is connecting from.
+Users that wish to enroll, must install a client that allows a user to register their hardware. However - we also want to grab some metadata about the hardware that the layman user may not know, such as the operating system the client is running on, and the IP address the client is connecting from.
 
 This is where our interceptors come in!
 
@@ -69,14 +69,13 @@ The server currently exposes three bits of functionality to an end-user:
 #### Register
 To register a client:
 ```bash
-./bin/edge-client register --region=london
+./bin/edge-client register
 ```
 Should create the following output in the server:
 ```
 2021/05/28 16:25:24 registering client success
 ```
 
-If region is not set, it will default to `undefined`.
 #### List
 To list clients that are registered with Ori's network:
 ```bash
@@ -88,21 +87,8 @@ Should create the following output in the server:
 ```
 And return ten (or less) locations to a user:
 ```
-2021/05/28 16:28:10 id:"160b7671-4570-4655-84ca-910e6e6aa529" region:"london" updated_at:{seconds:1622215524 nanos:854851258}
-```
-#### Get
-To get an individual client that is registered with Ori's network:
-```bash
-./bin/edge-client get --id=160b7671-4570-4655-84ca-910e6e6aa529
-```
-Should create the following output in the server:
-```
-2021/05/28 16:29:55 retrieving edge location...
-```
-And return ten (or less) locations to a user:
-```
-2021/05/28 16:29:55 id:"160b7671-4570-4655-84ca-910e6e6aa529" region:"london" updated_at:{seconds:1622215524 nanos:854851258}
+2021/05/28 16:28:10 id:"160b7671-4570-4655-84ca-910e6e6aa529" updated_at:{seconds:1622215524 nanos:854851258}
 ```
 ### Building our Interceptors
 
-TODO
+Now that we have our local environment up and running, open up a code editor of your choosing - let's build those interceptors!
