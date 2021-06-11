@@ -19,8 +19,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type EdgeLocationsClient interface {
 	Register(ctx context.Context, in *EdgeLocation, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	Get(ctx context.Context, in *EdgeLocation, opts ...grpc.CallOption) (*EdgeLocation, error)
-	List(ctx context.Context, in *ListEdgeLocationParams, opts ...grpc.CallOption) (EdgeLocations_ListClient, error)
+	List(ctx context.Context, opts ...grpc.CallOption) (EdgeLocations_ListClient, error)
 }
 
 type edgeLocationsClient struct {
@@ -40,37 +39,27 @@ func (c *edgeLocationsClient) Register(ctx context.Context, in *EdgeLocation, op
 	return out, nil
 }
 
-func (c *edgeLocationsClient) Get(ctx context.Context, in *EdgeLocation, opts ...grpc.CallOption) (*EdgeLocation, error) {
-	out := new(EdgeLocation)
-	err := c.cc.Invoke(ctx, "/edge_location.EdgeLocations/Get", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *edgeLocationsClient) List(ctx context.Context, in *ListEdgeLocationParams, opts ...grpc.CallOption) (EdgeLocations_ListClient, error) {
+func (c *edgeLocationsClient) List(ctx context.Context, opts ...grpc.CallOption) (EdgeLocations_ListClient, error) {
 	stream, err := c.cc.NewStream(ctx, &_EdgeLocations_serviceDesc.Streams[0], "/edge_location.EdgeLocations/List", opts...)
 	if err != nil {
 		return nil, err
 	}
 	x := &edgeLocationsListClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
 	return x, nil
 }
 
 type EdgeLocations_ListClient interface {
+	Send(*EdgeLocation) error
 	Recv() (*EdgeLocation, error)
 	grpc.ClientStream
 }
 
 type edgeLocationsListClient struct {
 	grpc.ClientStream
+}
+
+func (x *edgeLocationsListClient) Send(m *EdgeLocation) error {
+	return x.ClientStream.SendMsg(m)
 }
 
 func (x *edgeLocationsListClient) Recv() (*EdgeLocation, error) {
@@ -86,8 +75,7 @@ func (x *edgeLocationsListClient) Recv() (*EdgeLocation, error) {
 // for forward compatibility
 type EdgeLocationsServer interface {
 	Register(context.Context, *EdgeLocation) (*emptypb.Empty, error)
-	Get(context.Context, *EdgeLocation) (*EdgeLocation, error)
-	List(*ListEdgeLocationParams, EdgeLocations_ListServer) error
+	List(EdgeLocations_ListServer) error
 	mustEmbedUnimplementedEdgeLocationsServer()
 }
 
@@ -98,10 +86,7 @@ type UnimplementedEdgeLocationsServer struct {
 func (UnimplementedEdgeLocationsServer) Register(context.Context, *EdgeLocation) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
 }
-func (UnimplementedEdgeLocationsServer) Get(context.Context, *EdgeLocation) (*EdgeLocation, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
-}
-func (UnimplementedEdgeLocationsServer) List(*ListEdgeLocationParams, EdgeLocations_ListServer) error {
+func (UnimplementedEdgeLocationsServer) List(EdgeLocations_ListServer) error {
 	return status.Errorf(codes.Unimplemented, "method List not implemented")
 }
 func (UnimplementedEdgeLocationsServer) mustEmbedUnimplementedEdgeLocationsServer() {}
@@ -135,34 +120,13 @@ func _EdgeLocations_Register_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _EdgeLocations_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(EdgeLocation)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(EdgeLocationsServer).Get(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/edge_location.EdgeLocations/Get",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EdgeLocationsServer).Get(ctx, req.(*EdgeLocation))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _EdgeLocations_List_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(ListEdgeLocationParams)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(EdgeLocationsServer).List(m, &edgeLocationsListServer{stream})
+	return srv.(EdgeLocationsServer).List(&edgeLocationsListServer{stream})
 }
 
 type EdgeLocations_ListServer interface {
 	Send(*EdgeLocation) error
+	Recv() (*EdgeLocation, error)
 	grpc.ServerStream
 }
 
@@ -174,6 +138,14 @@ func (x *edgeLocationsListServer) Send(m *EdgeLocation) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func (x *edgeLocationsListServer) Recv() (*EdgeLocation, error) {
+	m := new(EdgeLocation)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 var _EdgeLocations_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "edge_location.EdgeLocations",
 	HandlerType: (*EdgeLocationsServer)(nil),
@@ -182,16 +154,13 @@ var _EdgeLocations_serviceDesc = grpc.ServiceDesc{
 			MethodName: "Register",
 			Handler:    _EdgeLocations_Register_Handler,
 		},
-		{
-			MethodName: "Get",
-			Handler:    _EdgeLocations_Get_Handler,
-		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "List",
 			Handler:       _EdgeLocations_List_Handler,
 			ServerStreams: true,
+			ClientStreams: true,
 		},
 	},
 	Metadata: "api/edge_location.proto",

@@ -19,10 +19,10 @@ type EdgeLocationsServer struct {
 // EdgeLocation is a struct that represents the structure and data held in
 // memory for an EdgeLocation
 type EdgeLocation struct {
-	Id        string
-	Region    string
-	IpAddress string
-	UpdatedAt time.Time
+	Id              string
+	IpAddress       string
+	OperatingSystem string
+	UpdatedAt       time.Time
 }
 
 // hydrateType takes a gRPC message representation of an EdgeLocation and
@@ -30,10 +30,10 @@ type EdgeLocation struct {
 // the original object not allowing it to be manipulated
 func hydrateType(el *api.EdgeLocation) EdgeLocation {
 	return EdgeLocation{
-		Id:        el.Id,
-		Region:    el.Region,
-		IpAddress: el.IpAddress,
-		UpdatedAt: el.UpdatedAt.AsTime(),
+		Id:              el.Id,
+		IpAddress:       el.IpAddress,
+		OperatingSystem: el.OperatingSystem,
+		UpdatedAt:       el.UpdatedAt.AsTime(),
 	}
 }
 
@@ -42,9 +42,9 @@ func hydrateType(el *api.EdgeLocation) EdgeLocation {
 // that it understands
 func hydrateResponse(el EdgeLocation) *api.EdgeLocation {
 	return &api.EdgeLocation{
-		Id:        el.Id,
-		Region:    el.Region,
-		IpAddress: el.IpAddress,
-		UpdatedAt: timestamppb.New(el.UpdatedAt),
+		Id:              el.Id,
+		IpAddress:       el.IpAddress,
+		OperatingSystem: el.OperatingSystem,
+		UpdatedAt:       timestamppb.New(el.UpdatedAt),
 	}
 }
