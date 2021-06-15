@@ -14,6 +14,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/ori-edge/grpc-interceptor-demo/pkg/api"
+	"github.com/ori-edge/grpc-interceptor-demo/pkg/interceptor"
 )
 
 const (
@@ -36,7 +37,12 @@ func main() {
 	}
 
 	// Dial the gRPC server in insecure mode (you should use SSL in production)
-	conn, err := grpc.Dial("localhost:5565", grpc.WithInsecure())
+	conn, err := grpc.Dial(
+		"localhost:5565",
+		grpc.WithInsecure(),
+		grpc.WithUnaryInterceptor(interceptor.UnaryClientInterceptor()),
+		grpc.WithStreamInterceptor(interceptor.StreamClientInterceptor()),
+	)
 	if err != nil {
 		log.Fatalf("couldn't connect to server: %v", err)
 		return
