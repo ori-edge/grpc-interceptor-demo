@@ -1,6 +1,7 @@
 ### Prerequisites
 - Go >=1.15
 - [protoc](https://grpc.io/docs/protoc-installation/) 
+- Optional: Read [our guide](https://github.com/ori-edge/grpc-interceptor-demo/blob/master/docs/blog.md) with a good introduction to gRPC interceptors
 
 ### Installation
 Open a terminal and simply run `make protoc && make build` to ensure that the generated files are up to date, and see the client and server binaries located in your bin directory within the repo.
