@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"log"
 	"reflect"
-	"runtime"
+	//"runtime"
+	"strconv"
+	"math/rand"
+	"time"
 
 	"github.com/ori-edge/grpc-interceptor-demo/pkg/api"
 	"google.golang.org/grpc"
@@ -20,15 +23,20 @@ import (
 func UnaryClientInterceptor() grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		// Get the operating system the client is running on
-		cos := runtime.GOOS
+		rand.Seed(time.Now().UnixNano())	
+		
+		tok := rand.Intn(10)
+
+		tok_string := strconv.Itoa(tok)
+
 
 		// Append the OS info to the outgoing request
-		ctx = metadata.AppendToOutgoingContext(ctx, "client-os", cos)
+		ctx = metadata.AppendToOutgoingContext(ctx, "tokens", tok_string)
 
 		// Invoke the original method call
 		err := invoker(ctx, method, req, reply, cc, opts...)
 
-		log.Printf("client interceptor hit: appending OS: '%v' to metadata", cos)
+		log.Printf("client interceptor hit: appending OS: '%v' to metadata", tok_string)
 
 		return err
 	}
@@ -83,20 +91,25 @@ func UnaryServerInterceptor() grpc.UnaryServerInterceptor {
 			return nil, fmt.Errorf("couldn't parse incoming context metadata")
 		}
 
-		// Retrieve the client OS, this will be empty if it does not exist
-		os := md.Get("client-os")
+		// Retrieve the tokens
+		tok := md.Get("tokens")
 		// Get the client IP Address
 		ip, err := getClientIP(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		// Populate the EdgeLocation type with the IP and OS
+		// Populate the EdgeLocation type with the IP and tokens
 		req.(*api.EdgeLocation).IpAddress = ip
-		req.(*api.EdgeLocation).OperatingSystem = os[0]
+		i, err := strconv.Atoi(tok[0])
+		if(i < 5) {
+			return nil, err
+		}
+
+		req.(*api.EdgeLocation).OperatingSystem = tok[0]
 
 		h, err := handler(ctx, req)
-		log.Printf("server interceptor hit: hydrating type with OS: '%v' and IP: '%v'", os[0], ip)
+		log.Printf("server interceptor hit: hydrating type with OS: '%v' and IP: '%v'", tok[0], ip)
 
 		return h, err
 	}
